@@ -1,14 +1,12 @@
-# 1. Use the base image with Java installed
-FROM openjdk:22-jdk-slim
-
-# 2. Set the working directory inside the container
+# Stage 1: Build the JAR
+FROM maven:3.9.4-eclipse-temurin-17 AS builder
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# 3. Copy the JAR file into the container
-COPY target/authapi-0.0.1-SNAPSHOT.jar app.jar
-
-# 4. Expose the port your app runs on (default is 8080)
+# Stage 2: Run the app
+FROM openjdk:22-jdk-slim
+WORKDIR /app
+COPY --from=builder /app/target/authapi-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
-# 5. Define the command to run the JAR
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -49,7 +49,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/update-password",
                                 "/api/auth/logout",
-                                "/api/auth/logout-all"
+                                "/api/auth/logout-all",
+                                "/api/profile/update-profile",
+                                "/api/profile/get-profile"
                         ).authenticated()
                         .anyRequest().authenticated()
                 )
@@ -63,6 +65,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     // ✅ PasswordEncoder Bean
     @Bean

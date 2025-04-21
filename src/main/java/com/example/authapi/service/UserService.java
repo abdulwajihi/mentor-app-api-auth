@@ -2,9 +2,12 @@ package com.example.authapi.service;
 
 import com.example.authapi.model.Otp;
 import com.example.authapi.model.User;
+import com.example.authapi.model.UserProfileResponse;
+import com.example.authapi.model.UserProfileUpdateRequest;
 import com.example.authapi.repository.UserRepository;
 import com.example.authapi.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -128,5 +131,43 @@ public class UserService {
         Otp otp = otpService.generateOtp(user, purpose, 5);
         emailService.sendOtpEmail(email, otp.getOtpCode());
     }
+    public UserProfileResponse updateUserProfile(Long userId, UserProfileUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"+userId));
+
+        user.setName(request.getName());
+        user.setBio(request.getBio());
+        user.setSkills(request.getSkills());
+
+        userRepository.save(user);
+
+        return UserProfileResponse.builder()
+                .name(user.getName())
+                .bio(user.getBio())
+                .skills(user.getSkills())
+                .build();
+    }
+    public UserProfileResponse getUserProfile(Long userId) {
+        System.out.println("Trying to fetch user with ID: " + userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
+
+        System.out.println("User found: " + user.getEmail());
+
+        return UserProfileResponse.builder()
+                .name(user.getName())
+                .bio(user.getBio())
+                .skills(user.getSkills())
+                .build();
+    }
+
+
+    public Long findIdByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return user.getId();
+    }
+
 
 }

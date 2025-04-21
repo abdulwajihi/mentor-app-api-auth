@@ -120,4 +120,5 @@ public class AuthController {
         return ResponseEntity.ok("Reset password OTP resent.");
     }
 
+
 }

@@ -1,6 +1,8 @@
 package com.example.authapi.controller;
 
 import com.example.authapi.service.UserService;
+import com.example.authapi.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +16,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 public class AuthController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/signup")
     public ResponseEntity<String> signUp(
@@ -80,18 +84,18 @@ public class AuthController {
 
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = userDetails.getUsername();
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String token = jwtUtil.extractTokenFromRequest(request);
+        if (token == null) {
+            return ResponseEntity.badRequest().body("No token provided");
+        }
 
-        // Increment tokenVersion to invalidate the current token
-        userService.logoutAll(email);
+        userService.logoutCurrentToken(token);
+        SecurityContextHolder.clearContext(); // Clear security context
 
-        // Clear SecurityContext after logout
-        SecurityContextHolder.clearContext();
-
-        return ResponseEntity.ok("Logged out successfully.");
+        return ResponseEntity.ok("Logged out from current session");
     }
+
 
 
     @PostMapping("/logout-all")

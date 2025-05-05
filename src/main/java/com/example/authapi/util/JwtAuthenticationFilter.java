@@ -1,6 +1,7 @@
 package com.example.authapi.util;
 
 import com.example.authapi.model.User;
+import com.example.authapi.repository.BlacklistedTokenRepository;
 import com.example.authapi.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -27,6 +28,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BlacklistedTokenRepository blacklistedTokenRepository;
+
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -46,6 +51,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userRepository.findByEmail(email).orElse(null);
+
+            if (blacklistedTokenRepository.existsByToken(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token is invalidated (logged out).");
+                return;
+            }
+
 
             if (user != null && jwtUtil.validateToken(token, user)) {
                 UserDetails userDetails = org.springframework.security.core.userdetails.User

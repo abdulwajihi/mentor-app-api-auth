@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -75,4 +76,17 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    public String extractTokenFromRequest(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
+    }
+
+    public Date getExpiryFromToken(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.getExpiration();
+    }
+
 }

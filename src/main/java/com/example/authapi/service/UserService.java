@@ -1,9 +1,7 @@
 package com.example.authapi.service;
 
-import com.example.authapi.model.Otp;
-import com.example.authapi.model.User;
-import com.example.authapi.model.UserProfileResponse;
-import com.example.authapi.model.UserProfileUpdateRequest;
+import com.example.authapi.model.*;
+import com.example.authapi.repository.BlacklistedTokenRepository;
 import com.example.authapi.repository.UserRepository;
 import com.example.authapi.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +25,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private BlacklistedTokenRepository blacklistedTokenRepository;
 
     public User signUp(String email, String password, String firstName, String lastName, String gender,String role) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -110,6 +111,20 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+
+    public void logoutCurrentToken(String token) {
+        if (blacklistedTokenRepository.existsByToken(token)) {
+            throw new RuntimeException("Token already blacklisted.");
+        }
+
+        BlacklistedToken blacklisted = new BlacklistedToken();
+        blacklisted.setToken(token);
+        blacklisted.setExpiryDate(jwtUtil.getExpiryFromToken(token));
+
+        blacklistedTokenRepository.save(blacklisted);
+    }
+
 
     public void logoutAll(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));

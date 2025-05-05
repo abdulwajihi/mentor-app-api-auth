@@ -15,13 +15,13 @@ public class OtpService {
     @Autowired
     private OtpRepository otpRepository;
 
-    public Otp generateOtp(User user, String purpose, int expirationMinutes) {
+    public Otp generateOtp(User user, String purpose, int expirationMinutes) {//delete all existing otp and generate and set new otp to  user
         List<Otp> existingOtps = otpRepository.findByUserAndPurpose(user, purpose);
         otpRepository.deleteAll(existingOtps);
 
         String otpCode = generateOtpCode();
         LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(expirationMinutes);
-        Otp otp = new Otp();
+        Otp otp = new Otp();//Generate otp for sending to user
         otp.setUser(user);
         otp.setOtpCode(otpCode);
         otp.setPurpose(purpose);
@@ -29,7 +29,7 @@ public class OtpService {
         return otpRepository.save(otp);
     }
 
-    public boolean verifyOtp(User user, String purpose, String otpCode) {
+    public boolean verifyOtp(User user, String purpose, String otpCode) {//verify otp
         List<Otp> otps = otpRepository.findByUserAndPurpose(user, purpose);
         for (Otp otp : otps) {
             if (otp.getOtpCode().equals(otpCode) && LocalDateTime.now().isBefore(otp.getExpirationTime())) {
@@ -40,7 +40,7 @@ public class OtpService {
         return false;
     }
 
-    private String generateOtpCode() {
+    private String generateOtpCode() {//Generate new otp
         SecureRandom random = new SecureRandom();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
